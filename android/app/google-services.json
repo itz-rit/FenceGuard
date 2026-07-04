@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "568224149902",
+    "project_id": "fenceguard-bfd1a",
+    "storage_bucket": "fenceguard-bfd1a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:568224149902:android:c2c6831a31428e26cef4df",
+        "android_client_info": {
+          "package_name": "com.fenceguard.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "568224149902-rjsopeii0910mldqnohgij8hto20l458.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fenceguard.app",
+            "certificate_hash": "345f3facd1e4f4b2f3153a85bd1f19f23529bcb6"
+          }
+        },
+        {
+          "client_id": "568224149902-vvrueh3pigofi9hq7ca8fvt1isqfnb4a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fenceguard.app",
+            "certificate_hash": "6165a6824a123b4118417512de35f05af233e082"
+          }
+        },
+        {
+          "client_id": "568224149902-lmhqak25sndvtq7i0s2sn5ub0lq97gph.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0z-uUkitXv0LNVqluREgQW7DSLTx0Up8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "568224149902-lmhqak25sndvtq7i0s2sn5ub0lq97gph.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "568224149902-gk4pmahhuhhejdhvn0ece83og0pvi4gm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.fenceguard"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

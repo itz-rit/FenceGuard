@@ -1,0 +1,42 @@
+name: fenceguard
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # UI
+  fl_chart: ^0.68.0  
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  cupertino_icons: ^1.0.8
+  
+  # Firebase
+  firebase_core: ^3.4.0
+  firebase_auth: ^5.3.1
+  firebase_messaging: ^15.0.0
+  firebase_database: ^11.0.0  # ← ADD THIS for Realtime Database
+  cloud_firestore: ^5.0.0
+  
+  # Authentication
+  google_sign_in: ^6.2.1
+  
+  # Notifications
+  flutter_local_notifications: ^17.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/logo.jpeg
