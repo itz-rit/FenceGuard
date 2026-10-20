@@ -128,6 +128,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // Firestore sensor status map
   Map<String, String> _sensorStatus = {};
 
+  // ✅ Freshness tracking for the demo — shows judges the data is really live
+  DateTime? _lastUpdated;
+  bool _esp32HasReceivedData = false;
+
   @override
   void initState() {
     super.initState();
@@ -139,12 +143,79 @@ class _HomeScreenState extends State<HomeScreen> {
         _esp32Voltage = (data['voltage'] ?? 0).toDouble();
         _esp32Current = (data['current'] ?? 0).toDouble();
         _esp32Status = data['status']?.toString() ?? 'offline';
+        _lastUpdated = DateTime.now();
+        _esp32HasReceivedData = true;
         
         // Also update the sensor status map for the map display
         _sensorStatus['esp32_001'] = _esp32Status;
       });
       debugPrint("📡 ESP32: ${_esp32Voltage}V, ${_esp32Current}A, $_esp32Status");
     });
+  }
+
+  // ✅ Human-readable "X seconds ago" for the live badge
+  String _lastUpdatedLabel() {
+    if (_lastUpdated == null) return 'Connecting...';
+    final seconds = DateTime.now().difference(_lastUpdated!).inSeconds;
+    if (seconds < 5) return 'Just now';
+    if (seconds < 60) return '${seconds}s ago';
+    return '${(seconds / 60).floor()}m ago';
+  }
+
+  // ✅ Tap-to-view detail popup for the real ESP32 sensor
+  void _showEsp32Detail(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        final color = _zoneColor('esp32_001');
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.memory, color: color, size: 28),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'ESP32 Sensor — Live',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text('Main Fence Line',
+                  style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const Divider(height: 28),
+              _detailRow('Status', _zoneStatusLabel('esp32_001'), color),
+              _detailRow('Voltage', '${_esp32Voltage.toStringAsFixed(1)} V', Colors.black87),
+              _detailRow('Current', '${_esp32Current.toStringAsFixed(2)} A', Colors.black87),
+              _detailRow('Last updated', _lastUpdatedLabel(), Colors.black87),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _detailRow(String label, String value, Color valueColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+          Text(value,
+              style: TextStyle(
+                  color: valueColor, fontSize: 14, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
   }
 
   // ✅ Get status for any sensor (combines Firestore + Realtime)
@@ -467,34 +538,65 @@ class _HomeScreenState extends State<HomeScreen> {
                                 final color = _zoneColor(zone.sensorId);
                                 final status =
                                     _zoneStatusLabel(zone.sensorId);
-                                return Marker(
-                                  point: zone.center,
-                                  width: 80,
-                                  height: 55,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
+                                final isLive = zone.sensorId == 'esp32_001';
+                                final markerContent = Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // "LIVE" tag only on the real ESP32 sensor
+                                    if (isLive)
                                       Container(
+                                        margin: const EdgeInsets.only(bottom: 2),
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 2),
+                                            horizontal: 5, vertical: 1),
                                         decoration: BoxDecoration(
-                                          color: color,
-                                          borderRadius:
-                                              BorderRadius.circular(8),
+                                          color: Colors.black87,
+                                          borderRadius: BorderRadius.circular(6),
                                         ),
-                                        child: Text(
-                                          status,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 9,
+                                        child: const Text(
+                                          '● LIVE',
+                                          style: TextStyle(
+                                            color: Colors.greenAccent,
+                                            fontSize: 8,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                       ),
-                                      Icon(Icons.location_pin,
-                                          color: color, size: 28),
-                                    ],
-                                  ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: color,
+                                        borderRadius:
+                                            BorderRadius.circular(8),
+                                        border: isLive
+                                            ? Border.all(
+                                                color: Colors.white, width: 1.5)
+                                            : null,
+                                      ),
+                                      child: Text(
+                                        status,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    Icon(Icons.location_pin,
+                                        color: color,
+                                        size: isLive ? 32 : 28),
+                                  ],
+                                );
+                                return Marker(
+                                  point: zone.center,
+                                  width: 80,
+                                  height: isLive ? 70 : 55,
+                                  child: isLive
+                                      ? GestureDetector(
+                                          onTap: () => _showEsp32Detail(context),
+                                          child: markerContent,
+                                        )
+                                      : markerContent,
                                 );
                               }).toList(),
                             ),
@@ -550,14 +652,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       ...kFenceZones.map((zone) {
                         final color = _zoneColor(zone.sensorId);
                         final status = _zoneStatusLabel(zone.sensorId);
-                        return Container(
+                        final isLive = zone.sensorId == 'esp32_001';
+                        final card = Container(
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: color.withOpacity(0.06),
                             borderRadius: BorderRadius.circular(10),
-                            border:
-                                Border.all(color: color.withOpacity(0.3)),
+                            border: Border.all(
+                                color: isLive
+                                    ? color
+                                    : color.withOpacity(0.3),
+                                width: isLive ? 1.5 : 1),
                           ),
                           child: Row(
                             children: [
@@ -590,7 +696,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     // Show live data for ESP32 zone
                                     if (zone.sensorId == 'esp32_001')
                                       Text(
-                                        "⚡ ${_esp32Voltage.toStringAsFixed(1)}V • 🔌 ${_esp32Current.toStringAsFixed(2)}A",
+                                        "⚡ ${_esp32Voltage.toStringAsFixed(1)}V • 🔌 ${_esp32Current.toStringAsFixed(2)}A • ${_lastUpdatedLabel()}",
                                         style: const TextStyle(
                                           fontSize: 10,
                                           color: Colors.grey,
@@ -619,6 +725,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         );
+                        return isLive
+                            ? GestureDetector(
+                                onTap: () => _showEsp32Detail(context),
+                                child: card,
+                              )
+                            : card;
                       }),
                     ],
                   ),

@@ -223,7 +223,7 @@ class MLService {
     final isDuskOrDawn = (hour >= 5 && hour <= 7) || (hour >= 17 && hour <= 20);
     if (isDuskOrDawn && reading.tension > 0.6 && reading.voltage < 9.0) {
       anomalies.add(
-          '🐘 Elephant activity pattern detected — high tension + voltage drop during animal active hours (${hour}:00)');
+          '🐘 Elephant activity pattern detected — high tension + voltage drop during animal active hours ($hour:00)');
       riskScore += 0.35;
     }
 
